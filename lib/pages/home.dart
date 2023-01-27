@@ -1,13 +1,9 @@
 import 'dart:convert';
-
 import 'package:bajaki_mobile/entity/happening.dart';
 import 'package:bajaki_mobile/pages/application_form.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
-import 'dart:io';
-import 'package:image_picker/image_picker.dart';
-import 'package:date_time_picker/date_time_picker.dart';
-import 'package:multi_select_flutter/multi_select_flutter.dart';
+
 
 class Home extends StatefulWidget {
   @override
@@ -43,8 +39,8 @@ class _HomeState extends State<Home> {
 
     List<Happening> happenings = [];
     try {
-      Map<String, dynamic> myMap  = decodedResponse['data']['events'];
-      myMap.forEach((key, value) {
+      Map<String, dynamic> eventMap = decodedResponse['data']['events'];
+      eventMap.forEach((key, value) {
         Happening happening = Happening.fromJson(value);
         happenings.add(happening);
       });

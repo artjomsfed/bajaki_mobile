@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:io';
@@ -113,7 +114,23 @@ class _ApplicationState extends State<Application> {
                           }
 
                           formKey.currentState!.save();
-                          submitForm();
+
+                          String responseString = await submitForm();
+                          var responseJson = jsonDecode(responseString);
+                          if (responseJson['code'] != 0) {
+                            String errorMessage = responseJson['data']['message'];
+
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text(errorMessage),
+                                backgroundColor: Colors.redAccent,
+                              ),
+                            );
+
+                            return;
+                          }
+
+                          showAlertDialog(context);
                         },
                         child: Text('Submit')
                     ),
@@ -519,8 +536,7 @@ class _ApplicationState extends State<Application> {
     );
   }
 
-  void submitForm() async {
-
+  Future<String> submitForm() async {
     var uri = Uri.parse('http://10.0.2.2:26000/api/apply/event/${widget.happeningId}');
     var request = http.MultipartRequest("POST", uri);
 
@@ -567,6 +583,33 @@ class _ApplicationState extends State<Application> {
     }
 
     var response = await request.send();
-    final respStr = await response.stream.bytesToString();
+
+    if (response.statusCode != 200) {
+      throw Exception('Request ended with error');
+    }
+
+    final responseString = await response.stream.bytesToString();
+
+    return responseString;
+  }
+
+  showAlertDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text("Success"),
+          content: Text("Application submitted"),
+          actions: [
+            TextButton(
+              child: Text("OK"),
+              onPressed: () {
+                Navigator.popUntil(context, ModalRoute.withName('/'));
+              },
+            )
+          ],
+        );;
+      },
+    );
   }
 }
