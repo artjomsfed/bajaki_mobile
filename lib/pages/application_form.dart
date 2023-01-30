@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:http/http.dart' as http;
 import 'dart:io';
 import 'package:image_picker/image_picker.dart';
@@ -537,7 +538,8 @@ class _ApplicationState extends State<Application> {
   }
 
   Future<String> submitForm() async {
-    var uri = Uri.parse('http://10.0.2.2:26000/api/apply/event/${widget.happeningId}');
+    String apiUrl = dotenv.get('API_URL');
+    var uri = Uri.parse('$apiUrl/api/apply/event/${widget.happeningId}');
     var request = http.MultipartRequest("POST", uri);
 
     request.fields['new_application_api[attender][firstName]'] = firstName ?? '';

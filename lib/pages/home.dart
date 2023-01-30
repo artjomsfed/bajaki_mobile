@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:bajaki_mobile/entity/happening.dart';
 import 'package:bajaki_mobile/pages/application_form.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:http/http.dart' as http;
 
 
@@ -24,9 +25,9 @@ class _HomeState extends State<Home> {
     happenings = loadHappenings();
   }
 
-  // Future<Happening> loadHappenings() async {
   Future<List<Happening>> loadHappenings() async {
-    final response = await http.get(Uri.parse('http://10.0.2.2:26000/api/'));
+    String apiUrl = dotenv.get('API_URL');
+    final response = await http.get(Uri.parse('$apiUrl/api/'));
 
     if (response.statusCode != 200) {
       throw Exception('Failed to load events');
