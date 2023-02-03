@@ -50,6 +50,8 @@ class _ApplicationState extends State<Application> {
   final ImagePicker picker = ImagePicker();
   final formKey = GlobalKey<FormState>();
 
+  bool _isLoading = false;
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -105,38 +107,8 @@ class _ApplicationState extends State<Application> {
                   ],
                 ),
                 SizedBox(height: 30),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    ElevatedButton(
-                        onPressed: () async {
-                          if (!formKey.currentState!.validate()) {
-                            return;
-                          }
-
-                          formKey.currentState!.save();
-
-                          String responseString = await submitForm();
-                          var responseJson = jsonDecode(responseString);
-                          if (responseJson['code'] != 0) {
-                            String errorMessage = responseJson['data']['message'];
-
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(
-                                content: Text(errorMessage),
-                                backgroundColor: Colors.redAccent,
-                              ),
-                            );
-
-                            return;
-                          }
-
-                          showAlertDialog(context);
-                        },
-                        child: Text('Submit')
-                    ),
-                  ],
-                ),
+                _isLoading == true ? buildSubmitInProgressIndication() : buildSubmitButton(),
+                SizedBox(height: 10),
               ],
             ),
           ),
@@ -584,7 +556,14 @@ class _ApplicationState extends State<Application> {
       request.files.add(multipartFile);
     }
 
+    //TODO: this should be moved to button and response should be returned
+    setState(() {
+      _isLoading = true;
+    });
     var response = await request.send();
+    setState(() {
+      _isLoading = false;
+    });
 
     if (response.statusCode != 200) {
       throw Exception('Request ended with error');
@@ -612,6 +591,65 @@ class _ApplicationState extends State<Application> {
           ],
         );;
       },
+    );
+  }
+
+  Widget buildSubmitButton() {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        ElevatedButton(
+            onPressed: () async {
+              if (_isLoading == true) {
+                return;
+              }
+
+              if (!formKey.currentState!.validate()) {
+                return;
+              }
+
+              formKey.currentState!.save();
+
+              String responseString = await submitForm();
+              var responseJson = jsonDecode(responseString);
+              if (responseJson['code'] != 0) {
+                String errorMessage = responseJson['data']['message'];
+
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text(errorMessage),
+                    backgroundColor: Colors.redAccent,
+                  ),
+                );
+
+                return;
+              }
+
+              showAlertDialog(context);
+            },
+            child: Text('Submit')
+        ),
+      ],
+    );
+  }
+
+  Widget buildSubmitInProgressIndication() {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        Flexible(
+          flex: 5,
+          child: CircularProgressIndicator(),
+        ),
+        Flexible(
+          flex: 1,
+          child: SizedBox(width: 10),
+        ),
+        Flexible(
+          flex: 5,
+          child: Text('Submitting application'),
+        ),
+      ],
     );
   }
 }
